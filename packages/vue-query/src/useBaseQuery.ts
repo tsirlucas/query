@@ -14,7 +14,6 @@ import type {
   QueryObserverResult,
   DefaultedQueryObserverOptions,
 } from '@tanstack/query-core'
-import { isServer } from '@tanstack/query-core'
 import { useQueryClient } from './useQueryClient'
 import { updateState, cloneDeepUnref, noop } from './utils'
 import type { QueryClient } from './queryClient'
@@ -95,12 +94,9 @@ export function useBaseQuery<
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!isRestoring) {
         unsubscribe.value()
-        // Nuxt2 memory leak fix - do not subscribe on server
-        if (!isServer) {
-          unsubscribe.value = observer.subscribe((result) => {
-            updateState(state, result)
-          })
-        }
+        unsubscribe.value = observer.subscribe((result) => {
+          updateState(state, result)
+        })
       }
     },
     { immediate: true },

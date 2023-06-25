@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { isServer, QueriesObserver } from '@tanstack/query-core'
+import { QueriesObserver } from '@tanstack/query-core'
 import type {
   QueriesPlaceholderDataFunction,
   QueryKey,
@@ -189,15 +189,12 @@ export function useQueries<
     (isRestoring) => {
       if (!isRestoring) {
         unsubscribe.value()
-        // Nuxt2 memory leak fix - do not subscribe on server
-        if (!isServer) {
-          unsubscribe.value = observer.subscribe(() => {
-            const [, getCombinedResultRestoring] = observer.getOptimisticResult(
-              defaultedQueries.value,
-            )
-            state.value = getCombinedResultRestoring()
-          })
-        }
+        unsubscribe.value = observer.subscribe(() => {
+          const [, getCombinedResultRestoring] = observer.getOptimisticResult(
+            defaultedQueries.value,
+          )
+          state.value = getCombinedResultRestoring()
+        })
         // Subscription would not fire for persisted results
         const [, getCombinedResultPersisted] = observer.getOptimisticResult(
           defaultedQueries.value,
