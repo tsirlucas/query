@@ -50,6 +50,16 @@ export interface HydrationStreamProviderProps<TShape> {
   onFlush?: () => TShape[]
 }
 
+const HYDRATION_KEY = '__RQ_hydrationKey'
+const HYDRATION_KEY_JSON = JSON.stringify(HYDRATION_KEY)
+const getStoredId = () => {
+  if(typeof window === 'undefined') {
+    return
+  }
+
+  return HYDRATION_KEY in window ? window[HYDRATION_KEY] : undefined
+}
+
 export function createHydrationStreamProvider<TShape>() {
   const context = React.createContext<HydrationStreamContext<TShape>>(
     null as any,
@@ -82,7 +92,9 @@ export function createHydrationStreamProvider<TShape>() {
     onFlush?: () => TShape[]
   }) {
     // unique id for the cache provider
-    const id = `__RQ${React.useId()}`
+    const generatedId = `__RQ${React.useId()}`
+    const storedId = getStoredId()
+    const id = storedId ?? generatedId
     const idJSON = JSON.stringify(id)
 
     const [transformer] = React.useState(
@@ -123,6 +135,7 @@ export function createHydrationStreamProvider<TShape>() {
       stream.length = 0
 
       const html: string[] = [
+        `window[${HYDRATION_KEY_JSON}] = ${idJSON};`,
         `window[${idJSON}] = window[${idJSON}] || [];`,
         `window[${idJSON}].push(${serializedCacheArgs});`,
       ]
